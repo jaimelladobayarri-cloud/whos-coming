@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { supabase } from "./supabase.js";
+import SettingsScreen from "./SettingsScreen.jsx";
 
 const CATEGORIES = [
   { label: "Returning Guest", color: "#C9A96E" },
@@ -142,8 +143,9 @@ function Avatar({vip, size=40, fontSize=12}) {
   );
 }
 
-export default function App() {
+export default function App({ currentUser }) {
   const today = cd(new Date());
+  const [showSettings, setShowSettings] = useState(false);
 
   const [vips,        setVips]        = useState([]);
   const [loading,     setLoading]     = useState(true);
@@ -380,6 +382,10 @@ export default function App() {
       <div style={{fontSize:12,color:"#555",letterSpacing:"0.2em",textTransform:"uppercase"}}>Loading…</div>
     </div>
   );
+
+  if (showSettings) return (
+    <SettingsScreen currentUser={currentUser} onBack={()=>setShowSettings(false)}/>
+  );
   return (
     <div style={{minHeight:"100vh",background:BG,fontFamily:FONT,color:"#F5F0E8",display:"flex",flexDirection:"column"}}>
 
@@ -390,13 +396,16 @@ export default function App() {
             <div style={{fontSize:20,fontStyle:"italic",letterSpacing:"0.05em"}}>Who's Coming?</div>
             <div style={{fontSize:9,color:"#C9A96E",letterSpacing:"0.2em",textTransform:"uppercase",marginTop:1}}>VIP Intelligence</div>
           </div>
-          <div style={{textAlign:"right"}}>
-            <div style={{fontSize:9,color:"#555",letterSpacing:"0.1em",textTransform:"uppercase"}}>Today</div>
-            <div style={{fontSize:12,color:"#C9A96E"}}>{fmt(today)}</div>
-            {!isToday2&&<>
-              <div style={{fontSize:9,color:"#444",letterSpacing:"0.1em",textTransform:"uppercase",marginTop:2}}>Viewing</div>
-              <div style={{fontSize:12,color:"#F5F0E8"}}>{fmt(activeDay)}</div>
-            </>}
+          <div style={{display:"flex",alignItems:"center",gap:12}}>
+            <div style={{textAlign:"right"}}>
+              <div style={{fontSize:9,color:"#555",letterSpacing:"0.1em",textTransform:"uppercase"}}>Today</div>
+              <div style={{fontSize:12,color:"#C9A96E"}}>{fmt(today)}</div>
+              {!isToday2&&<>
+                <div style={{fontSize:9,color:"#444",letterSpacing:"0.1em",textTransform:"uppercase",marginTop:2}}>Viewing</div>
+                <div style={{fontSize:12,color:"#F5F0E8"}}>{fmt(activeDay)}</div>
+              </>}
+            </div>
+            <button onClick={()=>setShowSettings(true)} style={{background:"none",border:"none",color:"#444",fontSize:20,cursor:"pointer",padding:"4px"}}>⚙️</button>
           </div>
         </div>
 
