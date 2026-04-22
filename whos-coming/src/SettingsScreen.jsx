@@ -9,6 +9,7 @@ export default function SettingsScreen({ currentUser, onBack }) {
   const [loading,     setLoading]     = useState(true);
   const [inviteEmail, setInviteEmail] = useState("");
   const [inviteName,  setInviteName]  = useState("");
+  const [invitePassword, setInvitePassword] = useState("");
   const [inviting,    setInviting]    = useState(false);
   const [toast,       setToast]       = useState("");
 
@@ -26,23 +27,27 @@ export default function SettingsScreen({ currentUser, onBack }) {
   };
 
   const handleInvite = async () => {
-    if (!inviteEmail.trim()) return;
+    if (!inviteEmail.trim() || !invitePassword.trim()) return;
     setInviting(true);
-    const { error } = await supabase.auth.admin.inviteUserByEmail(inviteEmail.trim(), {
-      data: { name: inviteName.trim() || inviteEmail.split("@")[0] }
+
+    // Sign up the new user
+    const { data, error } = await supabase.auth.signUp({
+      email: inviteEmail.trim(),
+      password: invitePassword.trim(),
+      options: {
+        data: { name: inviteName.trim() || inviteEmail.split("@")[0] },
+        emailRedirectTo: window.location.origin,
+      }
     });
+
     if (error) {
-      // Fallback: use signUp with a random password and they reset via email
-      const tempPassword = Math.random().toString(36).slice(-10) + "Aa1!";
-      const { error: err2 } = await supabase.auth.signUp({
-        email: inviteEmail.trim(),
-        password: tempPassword,
-        options: { data: { name: inviteName.trim() || inviteEmail.split("@")[0] } }
-      });
-      if (err2) { showToast("Error sending invite"); setInviting(false); return; }
+      showToast("Error: " + error.message);
+      setInviting(false);
+      return;
     }
-    showToast(`Invite sent to ${inviteEmail}`);
-    setInviteEmail(""); setInviteName("");
+
+    showToast(`User ${inviteEmail} created`);
+    setInviteEmail(""); setInviteName(""); setInvitePassword("");
     setInviting(false);
     setTimeout(fetchUsers, 1000);
   };
@@ -114,18 +119,22 @@ export default function SettingsScreen({ currentUser, onBack }) {
                 <div style={{ fontSize:10, color:"#666", letterSpacing:"0.15em", textTransform:"uppercase", marginBottom:5 }}>Name</div>
                 <input style={iSt} placeholder="e.g. Rooms Division" value={inviteName} onChange={e=>setInviteName(e.target.value)}/>
               </div>
-              <div style={{ marginBottom:14 }}>
+              <div style={{ marginBottom:10 }}>
                 <div style={{ fontSize:10, color:"#666", letterSpacing:"0.15em", textTransform:"uppercase", marginBottom:5 }}>Email *</div>
                 <input type="email" style={iSt} placeholder="email@hotel.com" value={inviteEmail} onChange={e=>setInviteEmail(e.target.value)}/>
               </div>
-              <button onClick={handleInvite} disabled={inviting||!inviteEmail.trim()} style={{
-                width:"100%", padding:"12px", background:inviting||!inviteEmail.trim()?"#1A1A1A":"#C9A96E",
-                border:"none", color:inviting||!inviteEmail.trim()?"#444":"#0E0E0E",
+              <div style={{ marginBottom:14 }}>
+                <div style={{ fontSize:10, color:"#666", letterSpacing:"0.15em", textTransform:"uppercase", marginBottom:5 }}>Temporary Password *</div>
+                <input type="text" style={iSt} placeholder="They can change it later" value={invitePassword} onChange={e=>setInvitePassword(e.target.value)}/>
+              </div>
+              <button onClick={handleInvite} disabled={inviting||!inviteEmail.trim()||!invitePassword.trim()} style={{
+                width:"100%", padding:"12px", background:inviting||!inviteEmail.trim()||!invitePassword.trim()?"#1A1A1A":"#C9A96E",
+                border:"none", color:inviting||!inviteEmail.trim()||!invitePassword.trim()?"#444":"#0E0E0E",
                 fontSize:11, letterSpacing:"0.2em", textTransform:"uppercase",
-                cursor:inviting||!inviteEmail.trim()?"not-allowed":"pointer",
+                cursor:inviting||!inviteEmail.trim()||!invitePassword.trim()?"not-allowed":"pointer",
                 fontFamily:FONT, fontWeight:"bold", borderRadius:8,
               }}>
-                {inviting ? "Sending…" : "Send Invitation"}
+                {inviting ? "Creating…" : "Create User"}
               </button>
             </div>
           </div>
