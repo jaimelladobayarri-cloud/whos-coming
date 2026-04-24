@@ -896,6 +896,16 @@ export default function App({ currentUser }) {
                 </div>
 
                 <button onClick={()=>{setSelVIP(null);setEditMode(false);setShowRes(false);}} style={{width:"100%",padding:"13px",background:"#1A1A1A",border:"1px solid #2A2A2A",color:"#555",fontSize:14,cursor:"pointer",fontFamily:FONT,borderRadius:10}}>Close</button>
+
+                <button onClick={async ()=>{
+                  if(!window.confirm(`Delete ${selVIP.name}? This cannot be undone.`)) return;
+                  setVips(p=>p.filter(v=>v.id!==selVIP.id));
+                  await deleteVip(selVIP.id);
+                  setSelVIP(null);
+                  showToast(`${selVIP.name} deleted`);
+                }} style={{width:"100%",padding:"12px",background:"none",border:"1px solid #E07A5F33",color:"#E07A5F",fontSize:13,cursor:"pointer",fontFamily:FONT,borderRadius:10,marginTop:8,letterSpacing:"0.05em"}}>
+                  Delete VIP
+                </button>
               </>
             )}
 
